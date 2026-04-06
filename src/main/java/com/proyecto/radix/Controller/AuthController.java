@@ -21,11 +21,11 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         String email = body.get("email");
-        String contrasena = body.get("contrasena");
+        String password = body.get("password");
 
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
 
-        if (usuario.isEmpty() || !usuario.get().getContrasena().equals(contrasena)) {
+        if (usuario.isEmpty() || !usuario.get().getPassword().equals(password)) {
             return ResponseEntity.status(401).body(Map.of("error", "Credenciales incorrectas"));
         }
 
@@ -47,7 +47,7 @@ public class AuthController {
         u.setNombre(body.get("nombre"));
         u.setApellido(body.get("apellido"));
         u.setEmail(body.get("email"));
-        u.setContrasena(body.get("contrasena"));
+        u.setPassword(body.get("password"));
         u.setRol("Doctor");
 
         usuarioRepository.save(u);
