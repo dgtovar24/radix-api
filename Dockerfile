@@ -21,8 +21,8 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-# Health check usando el actuator que ya está configurado
+# Health check usando el controller base
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+  CMD wget -qO- http://localhost:8080/v2/ || exit 1
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

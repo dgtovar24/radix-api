@@ -8,12 +8,11 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class HealthController {
 
-    @GetMapping
+    @GetMapping({"", "/"})
     public ResponseEntity<?> root() {
         return ResponseEntity.ok(Map.of(
             "name",        "Radix API",
