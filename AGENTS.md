@@ -15,7 +15,7 @@ Base path: `/api`
 
 | Method | Path | Description |
 |--------|------|-------------|
-| POST | `/api/auth/login` | Login with email/contrasena |
+| POST | `/api/auth/login` | Login with email/password |
 | POST | `/api/auth/register` | Register new user |
 | GET | `/actuator/health` | Health check (Spring Boot Actuator) |
 
