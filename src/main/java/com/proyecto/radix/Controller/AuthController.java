@@ -26,7 +26,7 @@ public class AuthController {
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
 
         if (usuario.isEmpty() || !usuario.get().getPassword().equals(password)) {
-            return ResponseEntity.status(401).body(Map.of("error", "Credenciales incorrectas"));
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
 
         Usuario u = usuario.get();
@@ -41,6 +41,7 @@ public class AuthController {
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         if (usuarioRepository.existsByEmail(body.get("email"))) {
             return ResponseEntity.status(400).body(Map.of("error", "Email already exists"));
+        }
 
         Usuario u = new Usuario();
         u.setFirstName(body.get("firstName"));
