@@ -21,36 +21,36 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         String email = body.get("email");
-        String contrasena = body.get("contrasena");
+        String password = body.get("password");
 
         Optional<Usuario> usuario = usuarioRepository.findByEmail(email);
 
-        if (usuario.isEmpty() || !usuario.get().getContrasena().equals(contrasena)) {
-            return ResponseEntity.status(401).body(Map.of("error", "Credenciales incorrectas"));
+        if (usuario.isEmpty() || !usuario.get().getPassword().equals(password)) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
 
         Usuario u = usuario.get();
         return ResponseEntity.ok(Map.of(
                 "id", u.getId(),
-                "nombre", u.getNombre(),
-                "rol", u.getRol()
+                "firstName", u.getFirstName(),
+                "role", u.getRole()
         ));
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         if (usuarioRepository.existsByEmail(body.get("email"))) {
-            return ResponseEntity.status(400).body(Map.of("error", "Email ya existe"));
+            return ResponseEntity.status(400).body(Map.of("error", "Email already exists"));
         }
 
         Usuario u = new Usuario();
-        u.setNombre(body.get("nombre"));
-        u.setApellido(body.get("apellido"));
+        u.setFirstName(body.get("firstName"));
+        u.setLastName(body.get("lastName"));
         u.setEmail(body.get("email"));
-        u.setContrasena(body.get("contrasena"));
-        u.setRol("Doctor");
+        u.setPassword(body.get("password"));
+        u.setRole("Doctor");
 
         usuarioRepository.save(u);
-        return ResponseEntity.ok(Map.of("mensaje", "Usuario creado"));
+        return ResponseEntity.ok(Map.of("message", "User created"));
     }
 }

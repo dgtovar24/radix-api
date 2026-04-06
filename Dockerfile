@@ -2,9 +2,9 @@ FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
 # Copiar wrapper y pom.xml primero para aprovechar cache de capas
+COPY pom.xml .
 COPY mvnw .
 COPY .mvn .mvn
-COPY pom.xml .
 
 # Descargar dependencias en capa separada (se cachea si pom.xml no cambia)
 RUN chmod +x mvnw && ./mvnw dependency:go-offline -q
