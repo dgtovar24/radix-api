@@ -32,25 +32,24 @@ public class AuthController {
         Usuario u = usuario.get();
         return ResponseEntity.ok(Map.of(
                 "id", u.getId(),
-                "nombre", u.getNombre(),
-                "rol", u.getRol()
+                "firstName", u.getFirstName(),
+                "role", u.getRole()
         ));
     }
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         if (usuarioRepository.existsByEmail(body.get("email"))) {
-            return ResponseEntity.status(400).body(Map.of("error", "Email ya existe"));
-        }
+            return ResponseEntity.status(400).body(Map.of("error", "Email already exists"));
 
         Usuario u = new Usuario();
-        u.setNombre(body.get("nombre"));
-        u.setApellido(body.get("apellido"));
+        u.setFirstName(body.get("firstName"));
+        u.setLastName(body.get("lastName"));
         u.setEmail(body.get("email"));
         u.setPassword(body.get("password"));
-        u.setRol("Doctor");
+        u.setRole("Doctor");
 
         usuarioRepository.save(u);
-        return ResponseEntity.ok(Map.of("mensaje", "Usuario creado"));
+        return ResponseEntity.ok(Map.of("message", "User created"));
     }
 }
