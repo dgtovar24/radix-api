@@ -16,7 +16,7 @@ spring:
 server:
   port: ${SERVER_PORT:8080}
   servlet:
-    context-path: /v2
+    context-path: ${CONTEXT_PATH:}
 
 management:
   endpoints:

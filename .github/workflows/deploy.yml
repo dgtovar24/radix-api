@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - v2
+      - main
   workflow_dispatch:
 
 jobs:
@@ -11,6 +12,21 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.ref_name }}" = "v2" ]; then
+            echo "VERSION=v2" >> $GITHUB_OUTPUT
+            echo "CONTEXT_PATH=/v2" >> $GITHUB_OUTPUT
+            echo "CONTAINER_NAME=radix-api-v2" >> $GITHUB_OUTPUT
+            echo "PORT=8080" >> $GITHUB_OUTPUT
+          else
+            echo "VERSION=v1" >> $GITHUB_OUTPUT
+            echo "CONTEXT_PATH=" >> $GITHUB_OUTPUT
+            echo "CONTAINER_NAME=radix-api" >> $GITHUB_OUTPUT
+            echo "PORT=8081" >> $GITHUB_OUTPUT
+          fi
+
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -25,37 +41,40 @@ jobs:
 
       - name: Stop old container
         run: |
-          if docker ps -a --format '{{.Names}}' | grep -q '^radix-api$'; then
-            docker kill radix-api 2>/dev/null || true
-            docker rm radix-api 2>/dev/null || true
+          if docker ps -a --format '{{.Names}}' | grep -q '^${{ steps.version.outputs.CONTAINER_NAME }}$'; then
+            docker kill ${{ steps.version.outputs.CONTAINER_NAME }} 2>/dev/null || true
+            docker rm ${{ steps.version.outputs.CONTAINER_NAME }} 2>/dev/null || true
           fi
 
       - name: Build Docker image
-        run: docker build -t radix-api:v2 .
+        run: docker build -t radix-api:${{ steps.version.outputs.VERSION }} .
 
       - name: Run container
         run: |
           docker run -d \
-            --name radix-api \
+            --name ${{ steps.version.outputs.CONTAINER_NAME }} \
             --restart unless-stopped \
-            -p 8080:8080 \
+            -p ${{ steps.version.outputs.PORT }}:8080 \
+            -e SERVER_PORT=8080 \
+            -e CONTEXT_PATH=${{ steps.version.outputs.CONTEXT_PATH }} \
             -e DB_HOST=${{ secrets.DB_HOST }} \
             -e DB_PORT=${{ secrets.DB_PORT }} \
             -e DB_NAME=${{ secrets.DB_NAME }} \
             -e DB_USER=${{ secrets.DB_USER }} \
             -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            radix-api:v2
+            radix-api:${{ steps.version.outputs.VERSION }}
 
       - name: Health check
         run: |
+          HEALTH_URL="http://localhost:${{ steps.version.outputs.PORT }}${{ steps.version.outputs.CONTEXT_PATH }}/"
           for i in {1..30}; do
-            if curl -sf http://localhost:8080/v2/ > /dev/null 2>&1; then
-              echo "Application is healthy"
+            if curl -sf "$HEALTH_URL" > /dev/null 2>&1; then
+              echo "Application is healthy at $HEALTH_URL"
               exit 0
             fi
             echo "Waiting for application to start... ($i/30)"
             sleep 2
           done
           echo "Health check failed"
-          docker logs radix-api
+          docker logs ${{ steps.version.outputs.CONTAINER_NAME }}
           exit 1
