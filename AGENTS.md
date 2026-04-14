@@ -1,56 +1,43 @@
-# AGENTS.md - Radix API
+# AGENTS.md
 
-## Build Commands
+## Dev Commands
+
 ```bash
-./mvnw clean compile          # Compile
-./mvnw test                   # Run tests
-./mvnw package -DskipTests    # Build JAR
+./mvnw spring-boot:run              # local dev (H2 in-memory, no setup)
+./mvnw test                         # all tests
+./mvnw test -Dtest=ClassName        # single test class
+./mvnw clean package -DskipTests     # JAR build
 ```
 
-Local Java 17, but Docker image uses Java 21 (eclipse-temurin). Build succeeds in Docker.
+## v1 Endpoints (Main branch)
 
-## Project Structure
+Base path: `/api`
 
-**Two branches with divergent histories:**
-- `main` - v1, no context path
-- `v2` - uses `/v2` context path prefix on all endpoints
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/auth/login` | Login with email/password |
+| POST | `/api/auth/register` | Register new user |
+| GET | `/actuator/health` | Health check (Spring Boot Actuator) |
 
-**Package:** `com.proyecto.radix/`
-- Controller/ - REST endpoints
-- Model/ - JPA entities
-- Repository/ - JpaRepository interfaces
-- DTO/ - Data Transfer Objects
-- Services/ - Business logic (v2 branch)
+## What's Wired vs. What's Scaffold
 
-## Key Conventions
-
-**Field naming (v2):** Use English field names matching database schema:
-- `firstName`, `lastName`, `role`, `password`, `createdAt`
-- NOT `nombre`, `apellido`, `rol`, `contrasena`, `fechaCreacion`
-
-**Entity models:** Use Lombok `@Data` + `@NoArgsConstructor`, manually write getters/setters for `Usuario`.
-
-**REST endpoints:** Lowercase plural, no Spanish names. Example: `@RequestMapping("/api/pacientes")`
-
-**Error responses:** English only: `"error"`, `"Invalid credentials"`, `"Email already exists"`, `"Not found"`
-
-## Deployment (Dokploy)
-
-- Container port: 8080 (internal), expose via host port mapping
-- Profile: `prod` with `application-prod.yml`
-- Context path `/v2` configured in `application-prod.yml`: `server.servlet.context-path: /v2`
-- Health endpoint: `GET /v2/` returns `{"status": "UP", "service": "radix-api", "version": "2"}`
+- `Usuario` entity → `UsuarioRepository` → `AuthController` → `/api/auth`
+- `Facultativo`, `Paciente`, `Tratamiento`, `MetricasSalud`, etc. exist as JPA entities but have **no controllers or services**
 
 ## Database
 
-- MySQL 8.4.8 on external host
-- Connection via environment variables: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`
-- Default: `base-de-datos-radix-6awzza:3306/radixDB`
-- Hibernate DDL auto: `update`
+- Local: H2 in-memory (`jdbc:h2:mem:radixdb`), schema auto-created from entities via `ddl-auto: update`
+- Production: MySQL via env vars `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`; activated by `-Dspring.profiles.active=prod`
+- **Default MySQL credentials are hardcoded in `application-prod.yml`** — do not commit real secrets
 
-## Testing
+## Tech Stack
 
-```bash
-./mvnw test -Dtest=RadixApplicationTests              # Single class
-./mvnw test -Dtest=RadixApplicationTests#contextLoads # Single method
-```
+- Spring Boot 3.5.9, Java 21, Maven
+- Spring Boot Actuator for health/metrics
+- JPA/Hibernate with `ddl-auto: update` — entities are the schema source of truth
+
+## Deployment
+
+- Dockerfile uses multi-stage build (`eclipse-temurin:21`), sets `spring.profiles.active=prod` at runtime
+- Built and deployed on Dokploy; see `DEPLOY.md` for env var configuration
+- API accessible at `https://api.raddix.pro/v1`

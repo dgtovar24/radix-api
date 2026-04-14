@@ -28,7 +28,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Tech Stack
 - **Spring Boot 3.5.9**, Java 21, Maven
-- **HAPI FHIR R4** (7.0.1) — standard HL7 FHIR patient resource handling
 - **H2** in-memory DB for local dev; **MySQL** for production (activated via `spring.profiles.active=prod`)
 - JPA/Hibernate with `ddl-auto=update` — schema is auto-managed from entity classes
 
@@ -36,20 +35,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 | Package | Purpose |
 |---|---|
-| `Controller/` | REST controllers — currently only `FHIRPatientController` at `/fhir/Patient` |
-| `Service/` | Active services — `FHIRPatientService` (FHIR CRUD over `Paciente` entity) |
-| `Services/` | Empty scaffold stubs — `PacientesService`, `TratamientoService` (not yet implemented) |
-| `FHIR/` | `PacienteToFhirConverter` — bidirectional conversion between `Paciente` JPA entity and FHIR `Patient` resource |
-| `Model/` | JPA entities mapping to the shared MySQL/Supabase schema |
+| `Controller/` | REST controllers — `AuthController` at `/api/auth` |
+| `Model/` | JPA entities mapping to MySQL schema |
 | `Repository/` | Spring Data JPA repositories, one per entity |
-| `Config/` | `FHIRWebConfig` — registers `application/fhir+json` as a supported media type alongside `application/json` |
-| `DTO/` | `AuthRequest` / `AuthResponse` — DTOs for a future auth endpoint (not yet wired) |
 
-### Only Active Endpoint
-`/fhir/Patient` — full CRUD (GET, POST, PUT, DELETE). Accepts and returns standard FHIR R4 `Patient` JSON. The controller delegates to `FHIRPatientService`, which persists via `PacienteRepository` and converts via `PacienteToFhirConverter`.
+### Active Endpoints
 
-### Model Entities vs. Active Code
-Most model entities (`Tratamiento`, `MetricasSalud`, `AlertaMetge`, `DispositivoReloj`, etc.) mirror the shared Supabase schema used by the frontend but have **no controllers or services yet**. Only `Paciente` is fully wired end-to-end.
+**Authentication** (`/api/auth`):
+- `POST /api/auth/login` — Login with email/password
+- `POST /api/auth/register` — Register new user (default rol: Doctor)
+
+**Health**:
+- `GET /actuator/health` — Application health status
+
+### Model Entities
+Most model entities (`Tratamiento`, `MetricasSalud`, `AlertaMetge`, `DispositivoReloj`, etc.) mirror the shared MySQL schema but have **no controllers or services yet**.
 
 ### Database Configuration
 - **Local**: H2 in-memory (`jdbc:h2:mem:radixdb`) — no setup required, schema auto-created

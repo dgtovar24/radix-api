@@ -1,33 +1,43 @@
-# Radix API - Dokploy Deployment Configuration
+# Radix API v2 - Deployment Guide
 
 ## Docker Image
-The Dockerfile is ready at `api/Dockerfile`
 
-## Environment Variables (set in Dokploy dashboard)
-```
-DB_HOST=base-de-datos-radix-6awzza
-DB_PORT=3306
-DB_NAME=radixDB
-DB_USER=root
-DB_PASSWORD=Diegoelmejor1.0
-SERVER_PORT=8080
-```
+The Dockerfile is at the repository root. Multi-stage build using `eclipse-temurin:21`.
 
-## MySQL Database Setup
-Before deploying, ensure MySQL database exists:
-```sql
-CREATE DATABASE radixDB CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
+## Environment Variables
 
-## Build
-The Dockerfile will:
-1. Build with Java 21 (eclipse-temurin)
-2. Use multi-stage build for small final image
-3. Expose port 8080
+Set these in your deployment platform (Dokploy):
 
-## Deploy Steps in Dokploy
+| Variable | Value | Description |
+|----------|-------|-------------|
+| DB_HOST | `base-de-datos-radix-6awzza` | MySQL internal hostname |
+| DB_PORT | `3306` | MySQL port |
+| DB_NAME | `radixDB` | Database name |
+| DB_USER | `root` | Database user |
+| DB_PASSWORD | `Diegoelmejor1.0` | Database password |
+| SERVER_PORT | `8080` | Application port |
+
+**Public connection:** `mysql://root:Diegoelmejor1.0@132.145.194.97:3306/radixDB`
+
+## Deploy Steps (Dokploy)
+
 1. Connect Git repository
 2. Select "Dockerfile" as build method
-3. Set root directory to `api/`
-4. Set environment variables
+3. Set root directory to project root
+4. Set environment variables (see table above)
 5. Deploy
+6. Configure domain `api.raddix.pro` → container port 8080
+
+## Build (Local)
+
+```bash
+./mvnw clean package -DskipTests
+docker build -t radix-api:v2 .
+```
+
+## Verify Deployment
+
+```bash
+curl https://api.raddix.pro/actuator/health
+# Expected: {"status":"UP"}
+```
