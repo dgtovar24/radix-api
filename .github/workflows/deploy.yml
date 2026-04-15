@@ -15,16 +15,11 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          if [ "${{ github.ref_name }}" = "v2" ]; then
-            echo "VERSION=v2" >> $GITHUB_OUTPUT
-            echo "CONTEXT_PATH=/v2" >> $GITHUB_OUTPUT
-            echo "CONTAINER_NAME=radix-api-v2" >> $GITHUB_OUTPUT
-            echo "PORT=8080" >> $GITHUB_OUTPUT
-          else
+          if [ "${{ github.ref_name }}" = "v2" ] || [ "${{ github.ref_name }}" = "main" ]; then
             echo "VERSION=v1" >> $GITHUB_OUTPUT
-            echo "CONTEXT_PATH=" >> $GITHUB_OUTPUT
+            echo "CONTEXT_PATH=/v1" >> $GITHUB_OUTPUT
             echo "CONTAINER_NAME=radix-api" >> $GITHUB_OUTPUT
-            echo "PORT=8081" >> $GITHUB_OUTPUT
+            echo "PORT=9000" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout code
@@ -54,10 +49,10 @@ jobs:
           docker run -d \
             --name ${{ steps.version.outputs.CONTAINER_NAME }} \
             --restart unless-stopped \
-            --network host \
-            -e SERVER_PORT=8080 \
+            -p 9000:9000 \
+            -e SERVER_PORT=9000 \
             -e CONTEXT_PATH=${{ steps.version.outputs.CONTEXT_PATH }} \
-            -e DB_HOST=${{ secrets.DB_HOST }} \
+            -e DB_HOST=132.145.194.97 \
             -e DB_PORT=${{ secrets.DB_PORT }} \
             -e DB_NAME=${{ secrets.DB_NAME }} \
             -e DB_USER=${{ secrets.DB_USER }} \
@@ -65,16 +60,19 @@ jobs:
             radix-api:${{ steps.version.outputs.VERSION }}
 
       - name: Health check
+        id: health_check
         run: |
           HEALTH_URL="http://localhost:${{ steps.version.outputs.PORT }}${{ steps.version.outputs.CONTEXT_PATH }}/"
-          for i in {1..30}; do
+          echo "Checking health at $HEALTH_URL"
+          for i in {1..45}; do
             if curl -sf "$HEALTH_URL" > /dev/null 2>&1; then
               echo "Application is healthy at $HEALTH_URL"
               exit 0
             fi
-            echo "Waiting for application to start... ($i/30)"
+            echo "Waiting for application to start... ($i/45)"
             sleep 2
           done
-          echo "Health check failed"
+          echo "Health check failed at $HEALTH_URL"
+          echo "--- CONTAINER LOGS ---"
           docker logs ${{ steps.version.outputs.CONTAINER_NAME }}
           exit 1
