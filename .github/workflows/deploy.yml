@@ -49,6 +49,7 @@ jobs:
           docker run -d \
             --name ${{ steps.version.outputs.CONTAINER_NAME }} \
             --restart unless-stopped \
+            --network dokploy-network \
             -p 9000:9000 \
             -e SERVER_PORT=9000 \
             -e CONTEXT_PATH=${{ steps.version.outputs.CONTEXT_PATH }} \
@@ -58,6 +59,11 @@ jobs:
             -e DB_USER=${{ secrets.DB_USER }} \
             -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
             radix-api:${{ steps.version.outputs.VERSION }}
+            
+      - name: Force Dokploy Network Attachment
+        run: |
+          docker network connect dokploy-network ${{ steps.version.outputs.CONTAINER_NAME }} 2>/dev/null || true
+          docker restart ${{ steps.version.outputs.CONTAINER_NAME }}
 
       - name: Health check
         id: health_check
