@@ -15,16 +15,11 @@ jobs:
       - name: Determine version
         id: version
         run: |
-          if [ "${{ github.ref_name }}" = "v2" ]; then
-            echo "VERSION=v2" >> $GITHUB_OUTPUT
-            echo "CONTEXT_PATH=/v2" >> $GITHUB_OUTPUT
-            echo "CONTAINER_NAME=radix-api-v2" >> $GITHUB_OUTPUT
-            echo "PORT=8080" >> $GITHUB_OUTPUT
-          else
+          if [ "${{ github.ref_name }}" = "v2" ] || [ "${{ github.ref_name }}" = "main" ]; then
             echo "VERSION=v1" >> $GITHUB_OUTPUT
-            echo "CONTEXT_PATH=" >> $GITHUB_OUTPUT
+            echo "CONTEXT_PATH=/v1" >> $GITHUB_OUTPUT
             echo "CONTAINER_NAME=radix-api" >> $GITHUB_OUTPUT
-            echo "PORT=8081" >> $GITHUB_OUTPUT
+            echo "PORT=8080" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout code
