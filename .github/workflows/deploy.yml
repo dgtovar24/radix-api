@@ -65,16 +65,19 @@ jobs:
             radix-api:${{ steps.version.outputs.VERSION }}
 
       - name: Health check
+        id: health_check
         run: |
           HEALTH_URL="http://localhost:${{ steps.version.outputs.PORT }}${{ steps.version.outputs.CONTEXT_PATH }}/"
-          for i in {1..30}; do
+          echo "Checking health at $HEALTH_URL"
+          for i in {1..45}; do
             if curl -sf "$HEALTH_URL" > /dev/null 2>&1; then
               echo "Application is healthy at $HEALTH_URL"
               exit 0
             fi
-            echo "Waiting for application to start... ($i/30)"
+            echo "Waiting for application to start... ($i/45)"
             sleep 2
           done
-          echo "Health check failed"
+          echo "Health check failed at $HEALTH_URL"
+          echo "--- CONTAINER LOGS ---"
           docker logs ${{ steps.version.outputs.CONTAINER_NAME }}
           exit 1
