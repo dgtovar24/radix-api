@@ -4,9 +4,12 @@ import lombok.Data;
 
 @Data
 public class RegisterRequest {
-    private String nombre;
-    private String apellido;
+    private String firstName;
+    private String lastName;
     private String email;
     private String password;
-    private String role;
+    
+    // Additional fields for patients
+    private String phone;
+    private String address;
 }
