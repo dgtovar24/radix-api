@@ -19,7 +19,7 @@ jobs:
             echo "VERSION=v1" >> $GITHUB_OUTPUT
             echo "CONTEXT_PATH=/v1" >> $GITHUB_OUTPUT
             echo "CONTAINER_NAME=radix-api" >> $GITHUB_OUTPUT
-            echo "PORT=8081" >> $GITHUB_OUTPUT
+            echo "PORT=9000" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout code
@@ -49,8 +49,8 @@ jobs:
           docker run -d \
             --name ${{ steps.version.outputs.CONTAINER_NAME }} \
             --restart unless-stopped \
-            -p 8081:8080 \
-            -e SERVER_PORT=8080 \
+            -p 9000:9000 \
+            -e SERVER_PORT=9000 \
             -e CONTEXT_PATH=${{ steps.version.outputs.CONTEXT_PATH }} \
             -e DB_HOST=132.145.194.97 \
             -e DB_PORT=${{ secrets.DB_PORT }} \
