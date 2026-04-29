@@ -10,4 +10,5 @@ public interface TreatmentRepository extends JpaRepository<Treatment, Integer> {
     List<Treatment> findByFkPatientId(Integer fkPatientId);
     List<Treatment> findByFkDoctorId(Integer fkDoctorId);
     List<Treatment> findByIsActiveTrue();
+    List<Treatment> findByFkPatientIdAndIsActiveTrue(Integer fkPatientId);
 }

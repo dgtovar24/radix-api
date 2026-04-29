@@ -1,13 +1,18 @@
 package com.project.radix.Controller;
 
 import com.project.radix.DTO.RegisterRequest;
+import com.project.radix.DTO.TokenRequest;
+import com.project.radix.DTO.TokenResponse;
+import com.project.radix.Model.OAuthClient;
 import com.project.radix.Model.Patient;
 import com.project.radix.Model.User;
+import com.project.radix.Repository.OAuthClientRepository;
 import com.project.radix.Repository.PatientRepository;
 import com.project.radix.Repository.UserRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,10 +24,56 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final PatientRepository patientRepository;
+    private final OAuthClientRepository oauthClientRepository;
 
-    public AuthController(UserRepository userRepository, PatientRepository patientRepository) {
+    public AuthController(UserRepository userRepository, PatientRepository patientRepository, OAuthClientRepository oauthClientRepository) {
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
+        this.oauthClientRepository = oauthClientRepository;
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<?> getToken(@RequestBody TokenRequest request) {
+        if (!"client_credentials".equals(request.getGrantType())) {
+            return ResponseEntity.status(400).body(Map.of("error", "Unsupported grant type"));
+        }
+
+        if (request.getClientId() == null || request.getClientSecret() == null) {
+            return ResponseEntity.status(400).body(Map.of("error", "client_id and client_secret are required"));
+        }
+
+        Optional<OAuthClient> clientOpt = oauthClientRepository.findByClientIdAndIsActiveTrue(request.getClientId());
+        if (clientOpt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid client credentials"));
+        }
+
+        OAuthClient client = clientOpt.get();
+        if (!client.getClientSecret().equals(request.getClientSecret())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid client credentials"));
+        }
+
+        String accessToken = UUID.randomUUID().toString();
+        LocalDateTime expiresAt = LocalDateTime.now().plusHours(24);
+
+        client.setExpiresAt(expiresAt);
+        oauthClientRepository.save(client);
+
+        Patient patient = null;
+        if (client.getFkUserId() != null) {
+            patient = patientRepository.findByFkUserId(client.getFkUserId()).orElse(null);
+        }
+
+        TokenResponse response = TokenResponse.builder()
+            .accessToken(accessToken)
+            .tokenType("Bearer")
+            .expiresIn(86400)
+            .scope(client.getScopes())
+            .patientId(patient != null ? patient.getId() : null)
+            .patientName(patient != null ? patient.getFullName() : null)
+            .familyAccessCode(patient != null ? patient.getFamilyAccessCode() : null)
+            .build();
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
@@ -34,7 +85,17 @@ public class AuthController {
             return ResponseEntity.status(400).body(Map.of("error", "Email and password are required"));
         }
 
-        // We use either email or the username (Radix for admin)
+        // Hardcoded Admin Check
+        if ("Radix".equals(email) && "radixelmejor1".equals(password)) {
+            return ResponseEntity.ok(Map.of(
+                    "token", "admin-hardcoded-token", // Use a static token for the hardcoded admin
+                    "id", 0, // Special ID for hardcoded admin
+                    "firstName", "Radix",
+                    "role", "ADMIN"
+            ));
+        }
+
+        // Database authentication for other users
         Optional<User> user = userRepository.findByEmail(email);
 
         if (user.isEmpty() || !user.get().getPassword().equals(password)) {
@@ -123,10 +184,20 @@ public class AuthController {
 
     private Optional<User> resolveTokenUser(String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) return Optional.empty();
+
+        String token = authHeader.substring(7).trim();
+
+        // Check for hardcoded admin token
+        if ("admin-hardcoded-token".equals(token)) {
+            User admin = new User();
+            admin.setId(0); // Special ID for hardcoded admin
+            admin.setRole("ADMIN");
+            return Optional.of(admin);
+        }
+
         try {
             // Simplified Token architecture: Extract user ID from "Bearer {userId}" placeholder mock
-            Integer userId = Integer.parseInt(authHeader.substring(7).trim());
-            return userRepository.findById(userId);
+            return userRepository.findById(Integer.parseInt(token));
         } catch (NumberFormatException e) {
             return Optional.empty();
         }
