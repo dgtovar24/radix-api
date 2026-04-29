@@ -353,3 +353,37 @@ Primary keys are automatically indexed. Additional indexes created for:
 ## Foreign Key Relationships
 
 All foreign keys use `ON DELETE CASCADE` where appropriate to ensure data integrity when parent records are deleted. SET NULL is used for optional relationships (e.g., smartwatch unlinking from treatment).
+
+---
+
+## Entities Without API Endpoints
+
+The following entities have JPA models, database tables, and Spring Data repositories but **NO REST controller endpoints**. These represent the most significant gap between the database schema and the exposed API.
+
+| Entity | Table | Repository | Priority | Frontend Component Using This Data |
+|--------|-------|------------|----------|-------------------------------------|
+| **Smartwatch** | `smartwatches` | `SmartwatchRepository` | P0 | `PatientRegistrationWizard` (Step 2), `BluetoothPairing` |
+| **HealthMetrics** | `health_metrics` | `HealthMetricsRepository` | P1 | `PatientDetails` (steps/BPM/SpO2 charts), `DashboardWidgets` |
+| **HealthLog** | `health_logs` | `HealthLogRepository` | P1 | `PatientDetails` (historical stats) |
+| **RadiationLog** | `radiation_logs` | `RadiationLogRepository` | P1 | `DashboardWidgets` (RadiationChartWidget), `PatientDetails` |
+| **MotivationalMessage** | `motivational_messages` | `MotivationalMessageRepository` | P2 | `PatientDetails` (messaging), `DashboardLayout` (chat) |
+| **GameSession** | `game_sessions` | `GameSessionRepository` | P2 | Patient gamification (future) |
+| **Settings** | `settings` | `SettingsRepository` | P2 | Patient preferences (unit, theme, notifications) |
+| **Unit** | `units` | `UnitRepository` | P2 | Treatment form unit selectors |
+| **OAuthClient** | `oauth_clients` | `OAuthClientRepository` | P2 | Auto-created in `DataLoader.java`; family access management |
+
+> See `MISSING_ENDPOINTS.md` for the complete gap analysis with dependency diagram, proposed endpoint signatures, and frontend-to-backend mapping.
+
+### Quick Reference: Missing Endpoint Counts
+
+| Category | Endpoints Needed |
+|----------|-----------------|
+| Smartwatch/Device management | 5 |
+| User CRUD (complete) | 3 |
+| Doctor/Facultative profile | 3 |
+| Patient update/delete | 2 |
+| Health metrics & radiation | 6 |
+| Messaging & gamification | 6 |
+| Chat & Rix AI (WebSocket) | 3 |
+| Units & OAuth support | 4 |
+| **Total** | **35** |

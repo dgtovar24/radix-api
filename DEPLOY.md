@@ -38,6 +38,8 @@ docker build -t radix-api:v2 .
 ## Verify Deployment
 
 ```bash
-curl https://api.raddix.pro/actuator/health
+curl https://api.raddix.pro/v2/actuator/health
 # Expected: {"status":"UP"}
 ```
+
+> ⚠️ **Nota:** El Dockerfile usa `/v1/actuator/health` en el HEALTHCHECK pero el context-path por defecto es `/v2` (application.properties). Verificar que ambos coincidan o que la variable `CONTEXT_PATH` esté configurada correctamente en producción.
