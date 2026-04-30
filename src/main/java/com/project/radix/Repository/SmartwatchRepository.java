@@ -10,5 +10,5 @@ import java.util.Optional;
 public interface SmartwatchRepository extends JpaRepository<Smartwatch, Integer> {
     Optional<Smartwatch> findByImei(String imei);
     Optional<Smartwatch> findByMacAddress(String macAddress);
-    Optional<Smartwatch> findByFkPatientId(Integer fkPatientId);
+    List<Smartwatch> findByFkPatientId(Integer fkPatientId);
 }

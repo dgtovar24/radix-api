@@ -20,8 +20,12 @@ https://api.raddix.pro/v2
 
 La API agrupa principalmente dos entidades de negocio:
 
-- **Usuarios (`Usuario`):** Personas que interactúan con el sistema. Pueden tener distintos roles (p.ej. _Doctor_ o _Paciente_).
+- **Usuarios (`Usuario`):** Personas que interactúan con el sistema. Los roles operativos del frontend son `DESARROLLADOR`, `ADMIN` y `FACULTATIVO`.
 - **Pacientes (`Pacientes`):** Corresponde a los registros clínicos y datos adicionales atados a un perfil de Usuario. Un paciente típicamente está asociado o gestionado por un Médico en el sistema.
+
+> **Note:** La página separada de facultativos fue eliminada del frontend. Los
+> facultativos se gestionan desde la página de usuarios y pueden pertenecer
+> opcionalmente a un departamento cuando exista el endpoint backend.
 
 ## Convenciones de Formato
 

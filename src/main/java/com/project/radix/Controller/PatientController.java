@@ -1,5 +1,6 @@
 package com.project.radix.Controller;
 
+import com.project.radix.DTO.PatientResponse;
 import com.project.radix.Model.Patient;
 import com.project.radix.Model.User;
 import com.project.radix.Repository.PatientRepository;
@@ -19,6 +20,20 @@ public class PatientController {
 
     private final PatientRepository patientRepository;
     private final UserRepository userRepository;
+
+    private PatientResponse toResponse(Patient p) {
+        return PatientResponse.builder()
+                .id(p.getId())
+                .fullName(p.getFullName())
+                .phone(p.getPhone())
+                .address(p.getAddress())
+                .isActive(p.getIsActive())
+                .familyAccessCode(p.getFamilyAccessCode())
+                .fkUserId(p.getFkUserId())
+                .fkDoctorId(p.getFkDoctorId())
+                .createdAt(p.getCreatedAt())
+                .build();
+    }
 
     @PostMapping("/register")
     public ResponseEntity<?> registerPatient(@RequestBody Map<String, String> body) {
@@ -41,6 +56,12 @@ public class PatientController {
         p.setIsActive(true);
         p.setFamilyAccessCode("FAM-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
 
+        if (body.containsKey("phone")) {
+            p.setPhone(body.get("phone"));
+        }
+        if (body.containsKey("address")) {
+            p.setAddress(body.get("address"));
+        }
         if (body.containsKey("doctorId")) {
             p.setFkDoctorId(Integer.parseInt(body.get("doctorId")));
         }
@@ -53,10 +74,7 @@ public class PatientController {
     @GetMapping("/profile/{userId}")
     public ResponseEntity<?> getProfileByUser(@PathVariable Integer userId) {
         return patientRepository.findByFkUserId(userId)
-                .map(p -> ResponseEntity.ok(Map.of(
-                        "id", p.getId(),
-                        "fullName", p.getFullName()
-                )))
+                .map(p -> ResponseEntity.ok((Object) toResponse(p)))
                 .orElse(ResponseEntity.status(404).body(Map.of("error", "Patient not found")));
     }
 
@@ -64,21 +82,40 @@ public class PatientController {
     public ResponseEntity<?> getPatient(@PathVariable Integer id) {
         return patientRepository.findById(id)
                 .filter(Patient::getIsActive)
-                .map(p -> ResponseEntity.ok(Map.of(
-                        "id", p.getId(),
-                        "fullName", p.getFullName()
-                )))
+                .map(p -> ResponseEntity.ok((Object) toResponse(p)))
                 .orElse(ResponseEntity.status(404).body(Map.of("error", "Not found")));
     }
 
     @GetMapping
     public ResponseEntity<?> getAllPatients() {
-        List<?> patients = patientRepository.findByIsActiveTrue().stream()
-                .map(p -> Map.of(
-                        "id", p.getId(),
-                        "fullName", p.getFullName()
-                ))
+        List<PatientResponse> patients = patientRepository.findByIsActiveTrue().stream()
+                .map(this::toResponse)
                 .toList();
         return ResponseEntity.ok(patients);
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updatePatient(@PathVariable Integer id, @RequestBody Map<String, String> body) {
+        return patientRepository.findById(id)
+                .map(p -> {
+                    if (body.containsKey("phone")) p.setPhone(body.get("phone"));
+                    if (body.containsKey("address")) p.setAddress(body.get("address"));
+                    if (body.containsKey("familyAccessCode")) p.setFamilyAccessCode(body.get("familyAccessCode"));
+                    if (body.containsKey("isActive")) p.setIsActive(Boolean.parseBoolean(body.get("isActive")));
+                    patientRepository.save(p);
+                    return ResponseEntity.ok((Object) toResponse(p));
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of("error", "Patient not found")));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deactivatePatient(@PathVariable Integer id) {
+        return patientRepository.findById(id)
+                .map(p -> {
+                    p.setIsActive(false);
+                    patientRepository.save(p);
+                    return ResponseEntity.ok(Map.of("message", "Patient deactivated"));
+                })
+                .orElse(ResponseEntity.status(404).body(Map.of("error", "Patient not found")));
     }
 }

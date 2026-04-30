@@ -87,8 +87,8 @@ public class WatchDataService {
         return metricsRepository.findFirstByFkPatientIdOrderByRecordedAtDesc(patientId)
             .map(m -> {
                 String imei = "";
-                Smartwatch watch = smartwatchRepository.findByFkPatientId(patientId).orElse(null);
-                if (watch != null) imei = watch.getImei();
+                var watches = smartwatchRepository.findByFkPatientId(patientId);
+                if (!watches.isEmpty()) imei = watches.get(0).getImei();
 
                 return WatchMetricsResponse.builder()
                     .id(m.getId())

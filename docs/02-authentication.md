@@ -1,24 +1,26 @@
 # Guía de Autenticación en la API
 
-Esta guía práctica te muestra paso a paso cómo registrar nuevos médicos y cómo autenticar a cualquier usuario (Doctor o Paciente) para obtener sus credenciales de acceso desde la API.
+Esta guía práctica te muestra paso a paso cómo registrar nuevos usuarios clínicos y cómo autenticar a cualquier usuario para obtener sus credenciales de acceso desde la API.
 
 > **Note:** Todos los ejemplos asumen que estás ejecutando las llamadas contra la URL base configurada en tu entorno (por ejemplo, `https://api.raddix.pro/v2`). Si realizas peticiones locales, reemplaza el dominio por `http://localhost:8080`.
 
-## Registrar un nuevo médico
+## Registrar un nuevo facultativo
 
-El registro a través del endpoint libre está reservado exclusivamente para crear cuentas con el rol de **Doctor**. 
-(Nota: *La creación de pacientes* debe ser gestionada por un médico a través del endpoint de alta correspondiente).
+El registro actual de backend sigue usando el endpoint de doctor, pero el
+frontend normaliza el rol clínico como **FACULTATIVO**. La creación de pacientes
+debe ser gestionada por un facultativo a través del endpoint de alta
+correspondiente.
 
-Para crear un doctor en el sistema, configura una petición POST:
+Para crear un facultativo en el sistema, configura una petición POST:
 
-1. Modifica la URL a `/api/auth/register`.
+1. Modifica la URL a `/api/auth/register/doctor`.
 2. Especifica en los encabezados que el contenido es JSON (`Content-Type: application/json`).
 3. Envía el nombre, apellido, correo y contraseña del doctor.
 
 **Ejemplo de petición:**
 
 ```bash
-curl -X POST https://api.raddix.pro/v2/api/auth/register \
+curl -X POST https://api.raddix.pro/v2/api/auth/register/doctor \
   -H "Content-Type: application/json" \
   -d '{
     "firstName": "Gregory",
@@ -62,12 +64,12 @@ Si los datos son validados correctamente, el backend te responderá con un códi
 {
   "id": 14,
   "firstName": "Gregory",
-  "role": "Doctor"
+  "role": "FACULTATIVO"
 }
 ```
 
 - **`id`:** Corresponde al identificador primario de la tabla de usuarios. Debe utilizarse luego para vincular o buscar perfiles asociados (p. ej. perfil de reloj de paciente).
-- **`role`:** Garantiza al frontend saber si se debe renderizar el portal médico o la aplicación orientada al usuario final (`Doctor` o `Paciente`).
+- **`role`:** Garantiza al frontend saber qué permisos debe renderizar. Los roles operativos son `DESARROLLADOR`, `ADMIN` y `FACULTATIVO`.
 
 Si envías una contraseña incorrecta o un correo que no existe en el registro, el sistema devolverá un `401 Unauthorized`.
 

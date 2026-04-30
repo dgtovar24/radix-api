@@ -104,7 +104,7 @@ public class AuthController {
 
         User u = user.get();
         return ResponseEntity.ok(Map.of(
-                "token", u.getId(), // Fake token using ID as the session mock architecture
+                "token", String.valueOf(u.getId()),
                 "id", u.getId(),
                 "firstName", u.getFirstName(),
                 "role", u.getRole()
