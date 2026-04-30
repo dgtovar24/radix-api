@@ -50,7 +50,7 @@ public class MessageController {
                 .map(m -> {
                     m.setIsRead(true);
                     messageRepository.save(m);
-                    return ResponseEntity.ok(toResponse(m));
+                    return ResponseEntity.ok((Object) toResponse(m));
                 })
                 .orElse(ResponseEntity.status(404).body(Map.of("error", "Message not found")));
     }
