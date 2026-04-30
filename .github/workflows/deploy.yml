@@ -49,6 +49,7 @@ jobs:
           docker run -d \
             --name ${{ steps.version.outputs.CONTAINER_NAME }} \
             --restart unless-stopped \
+            --network dokploy-network \
             -p 9000:9000 \
             -v /home/ubuntu/radix-uploads:/home/ubuntu/radix-uploads \
             -e SERVER_PORT=9000 \

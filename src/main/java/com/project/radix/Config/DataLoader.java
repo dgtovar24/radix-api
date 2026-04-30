@@ -34,7 +34,7 @@ public class DataLoader {
             SettingsRepository settingsRepo,
             OAuthClientRepository oauthRepo) {
         return args -> {
-            if (userRepo.count() > 5) { System.out.println("DB already seeded, skipping."); return; }
+            if (userRepo.count() > 0) { System.out.println("DB already seeded, skipping."); return; }
 
             System.out.println("====== SEEDING DATABASE ======");
 
