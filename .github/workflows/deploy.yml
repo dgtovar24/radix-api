@@ -50,8 +50,10 @@ jobs:
             --name ${{ steps.version.outputs.CONTAINER_NAME }} \
             --restart unless-stopped \
             -p 9000:9000 \
+            -v /home/ubuntu/radix-uploads:/home/ubuntu/radix-uploads \
             -e SERVER_PORT=9000 \
             -e CONTEXT_PATH=${{ steps.version.outputs.CONTEXT_PATH }} \
+            -e UPLOADS_PATH=/home/ubuntu/radix-uploads \
             -e DB_HOST=132.145.194.97 \
             -e DB_PORT=${{ secrets.DB_PORT }} \
             -e DB_NAME=${{ secrets.DB_NAME }} \
