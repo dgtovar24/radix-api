@@ -6,6 +6,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,26 +33,27 @@ public class DataLoader {
             MotivationalMessageRepository messageRepo,
             GameSessionRepository gameRepo,
             SettingsRepository settingsRepo,
-            OAuthClientRepository oauthRepo) {
+            OAuthClientRepository oauthRepo,
+            PasswordEncoder passwordEncoder) {
         return args -> {
             if (userRepo.count() > 0) { System.out.println("DB already seeded, skipping."); return; }
 
             System.out.println("====== SEEDING DATABASE ======");
 
             // ─── USERS ───
-            User admin = user("Radix", "Admin", "Radix", "prgtest", "ADMIN", null, null, "600111000");
+            User admin = user("Radix", "Admin", "Radix", "prgtest", "ADMIN", null, null, "600111000", passwordEncoder);
             User drElena = user("Elena", "Ruiz", "elena.ruiz@radix.pro", "pass123", "Doctor",
-                    "282864321", "Medicina Nuclear", "600111001");
+                    "282864321", "Medicina Nuclear", "600111001", passwordEncoder);
             User drMarc = user("Marc", "Vidal", "marc.vidal@radix.pro", "pass123", "Doctor",
-                    "282864322", "Oncología Radioterápica", "600111002");
+                    "282864322", "Oncología Radioterápica", "600111002", passwordEncoder);
             User drInes = user("Inés", "Ferrer", "ines.ferrer@radix.pro", "pass123", "Doctor",
-                    "282864323", "Radiofísica Hospitalaria", "600111003");
+                    "282864323", "Radiofísica Hospitalaria", "600111003", passwordEncoder);
             User drPablo = user("Pablo", "Torres", "pablo.torres@radix.pro", "pass123", "Doctor",
-                    "282864324", "Endocrinología", "600111004");
+                    "282864324", "Endocrinología", "600111004", passwordEncoder);
             User drCarmen = user("Carmen", "Navarro", "carmen.navarro@radix.pro", "pass123", "Doctor",
-                    "282864325", "Medicina Nuclear", "600111005");
+                    "282864325", "Medicina Nuclear", "600111005", passwordEncoder);
             User drDiego = user("Diego", "Alonso", "diego.alonso@radix.pro", "pass123", "Doctor",
-                    "282864326", "Oncología Radioterápica", "600111006");
+                    "282864326", "Oncología Radioterápica", "600111006", passwordEncoder);
             userRepo.saveAll(List.of(admin, drElena, drMarc, drInes, drPablo, drCarmen, drDiego));
             System.out.println("  -> 7 users created (1 admin + 6 doctors)");
 
@@ -76,7 +78,7 @@ public class DataLoader {
                 String fullName = patientData[i][0] + " " + patientData[i][1];
                 User u = userRepo.save(user(patientData[i][0], patientData[i][1],
                         patientData[i][0].toLowerCase() + "@paciente.com", "pass123", "patient",
-                        null, null, String.format(phones[i], i + 10)));
+                        null, null, String.format(phones[i], i + 10), passwordEncoder));
                 Patient p = new Patient();
                 p.setFullName(fullName);
                 p.setPhone(String.format(phones[i], i + 10));
@@ -85,6 +87,7 @@ public class DataLoader {
                 p.setFamilyAccessCode("FAM-" + String.format("%04d", i + 1));
                 p.setFkUserId(u.getId());
                 p.setFkDoctorId(doctors[i % doctors.length].getId());
+                p.setCreatedAt(LocalDateTime.now().minusDays(28 - i));
                 patientRepo.save(p);
             }
             System.out.println("  -> 12 patients created");
@@ -319,12 +322,12 @@ public class DataLoader {
     }
 
     private User user(String firstName, String lastName, String email, String password, String role,
-                      String license, String specialty, String phone) {
+                      String license, String specialty, String phone, PasswordEncoder encoder) {
         User u = new User();
         u.setFirstName(firstName);
         u.setLastName(lastName);
         u.setEmail(email);
-        u.setPassword(password);
+        u.setPassword(encoder.encode(password));
         u.setRole(role);
         u.setLicenseNumber(license);
         u.setSpecialty(specialty);

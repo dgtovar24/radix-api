@@ -3,6 +3,7 @@ package com.project.radix.Controller;
 import com.project.radix.DTO.TreatmentCreateRequest;
 import com.project.radix.DTO.TreatmentResponse;
 import com.project.radix.Service.TreatmentService;
+import com.project.radix.Util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,7 @@ import java.util.Map;
 public class TreatmentController {
 
     private final TreatmentService treatmentService;
+    private final JwtUtil jwtUtil;
 
     @GetMapping
     public ResponseEntity<List<TreatmentResponse>> getAllTreatments() {
@@ -63,11 +65,6 @@ public class TreatmentController {
     private Integer resolveDoctorId(String auth) {
         if (auth == null || !auth.startsWith("Bearer ")) return null;
         String token = auth.substring(7).trim();
-        if ("admin-hardcoded-token".equals(token)) return 0;
-        try {
-            return Integer.parseInt(token);
-        } catch (NumberFormatException e) {
-            return null;
-        }
+        return jwtUtil.getUserId(token).orElse(null);
     }
 }

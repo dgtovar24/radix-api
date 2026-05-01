@@ -16,8 +16,8 @@ These endpoints expose operational metadata and generated documentation.
 
 ## Authentication
 
-Authentication is currently mock-oriented. The API returns user IDs or the
-hardcoded admin token as bearer-like tokens.
+Authentication is currently mock-oriented. The API returns user IDs and OAuth
+client tokens as bearer-like tokens.
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -37,7 +37,7 @@ clinical staff from the Users page.
 | `GET` | `/api/users` | Lists users. |
 | `GET` | `/api/users/role/{role}` | Lists users by role. |
 | `GET` | `/api/users/{id}` | Gets one user. |
-| `PUT` | `/api/users/{id}` | Updates one user. |
+| `PUT` | `/api/users/{id}` | Updates one user, including password reset. |
 | `DELETE` | `/api/users/{id}` | Deletes one user. |
 | `GET` | `/api/doctors` | Lists clinical doctors/facultativos. |
 | `GET` | `/api/doctors/{id}` | Gets one clinical doctor/facultativo. |
@@ -114,13 +114,30 @@ ingestion, settings, messages, isotope catalogs, units, and games.
 | `GET` | `/api/units/{id}` | Gets one unit. |
 | `GET` | `/api/settings/patient/{patientId}` | Gets patient settings. |
 | `PUT` | `/api/settings/patient/{patientId}` | Updates patient settings. |
+| `GET` | `/api/oauth-clients` | Lists OAuth/API clients. |
+| `POST` | `/api/oauth-clients` | Creates an OAuth/API client. |
 | `GET` | `/api/games/patient/{patientId}` | Lists patient game sessions. |
 | `POST` | `/api/games` | Creates a game session. |
 
+## Current web dependencies
+
+The Astro web app calls `/api/*` locally and forwards those calls to the
+backend through `radix-web/src/pages/api/[...path].ts`.
+
+Current profile and configuration dependencies are:
+
+- `/mi-perfil` reads `GET /api/users/{id}` and saves with
+  `PUT /api/users/{id}`. Password reset also uses `PUT /api/users/{id}` with a
+  `password` field. The UI does not expose self-service account deletion.
+- `/configuracion` reads and creates API credentials with
+  `GET /api/oauth-clients`, `POST /api/oauth-clients`, and
+  `POST /api/auth/token`.
+
 ## Missing endpoints
 
-The current frontend needs these endpoints before mock data can be removed from
-the Users page.
+The current frontend uses API data through the Astro `/api/*` proxy. The Users
+page still needs these backend endpoints to replace its client-side derived
+department, assignment, and chart states with persistent server data.
 
 ```mermaid
 flowchart TD

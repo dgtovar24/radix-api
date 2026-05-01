@@ -32,7 +32,7 @@ public class Patient {
     private Integer fkDoctorId;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "fk_user_id", insertable = false, updatable = false)

@@ -47,6 +47,7 @@ public class UserController {
                     if (body.containsKey("licenseNumber")) u.setLicenseNumber(body.get("licenseNumber"));
                     if (body.containsKey("specialty")) u.setSpecialty(body.get("specialty"));
                     if (body.containsKey("role")) u.setRole(body.get("role"));
+                    if (body.containsKey("password")) u.setPassword(body.get("password"));
                     userRepository.save(u);
                     return ResponseEntity.ok((Object) u);
                 })
