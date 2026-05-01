@@ -4,6 +4,7 @@ import com.project.radix.DTO.GameSessionRequest;
 import com.project.radix.DTO.GameSessionResponse;
 import com.project.radix.Model.GameSession;
 import com.project.radix.Repository.GameSessionRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +36,7 @@ public class GameController {
     }
 
     @PostMapping
-    public ResponseEntity<GameSessionResponse> create(@RequestBody GameSessionRequest request) {
+    public ResponseEntity<GameSessionResponse> create(@Valid @RequestBody GameSessionRequest request) {
         GameSession g = new GameSession();
         g.setFkPatientId(request.getFkPatientId());
         g.setScore(request.getScore() != null ? request.getScore() : 0);

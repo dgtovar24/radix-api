@@ -3,6 +3,7 @@ package com.project.radix.Controller;
 import com.project.radix.DTO.SmartwatchRequest;
 import com.project.radix.DTO.SmartwatchResponse;
 import com.project.radix.Service.SmartwatchService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,7 +20,7 @@ public class SmartwatchController {
     private final SmartwatchService smartwatchService;
 
     @PostMapping
-    public ResponseEntity<?> create(@RequestBody SmartwatchRequest request) {
+    public ResponseEntity<?> create(@Valid @RequestBody SmartwatchRequest request) {
         try {
             SmartwatchResponse response = smartwatchService.create(request);
             return ResponseEntity.status(201).body(response);
@@ -48,7 +49,7 @@ public class SmartwatchController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(@PathVariable Integer id, @RequestBody SmartwatchRequest request) {
+    public ResponseEntity<?> update(@PathVariable Integer id, @Valid @RequestBody SmartwatchRequest request) {
         try {
             return ResponseEntity.ok(smartwatchService.update(id, request));
         } catch (RuntimeException e) {

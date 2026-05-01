@@ -4,6 +4,7 @@ import com.project.radix.DTO.MessageRequest;
 import com.project.radix.DTO.MessageResponse;
 import com.project.radix.Model.MotivationalMessage;
 import com.project.radix.Repository.MotivationalMessageRepository;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -36,7 +37,7 @@ public class MessageController {
     }
 
     @PostMapping
-    public ResponseEntity<MessageResponse> send(@RequestBody MessageRequest request) {
+    public ResponseEntity<MessageResponse> send(@Valid @RequestBody MessageRequest request) {
         MotivationalMessage m = new MotivationalMessage();
         m.setFkPatientId(request.getFkPatientId());
         m.setMessageText(request.getMessageText());

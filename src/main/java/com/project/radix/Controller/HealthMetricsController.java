@@ -6,6 +6,7 @@ import com.project.radix.DTO.HealthMetricsResponse;
 import com.project.radix.DTO.RadiationLogResponse;
 import com.project.radix.Service.HealthMetricsService;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,7 +42,7 @@ public class HealthMetricsController {
     }
 
     @PostMapping("/api/health-metrics")
-    public ResponseEntity<HealthMetricsResponse> create(@RequestBody HealthMetricsRequest request) {
+    public ResponseEntity<HealthMetricsResponse> create(@Valid @RequestBody HealthMetricsRequest request) {
         return ResponseEntity.status(201).body(service.create(request));
     }
 

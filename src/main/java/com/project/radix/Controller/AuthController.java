@@ -10,9 +10,14 @@ import com.project.radix.Repository.OAuthClientRepository;
 import com.project.radix.Repository.PatientRepository;
 import com.project.radix.Repository.UserRepository;
 import com.project.radix.Util.JwtUtil;
+import com.project.radix.Util.RateLimiter;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -29,18 +34,22 @@ public class AuthController {
     private final OAuthClientRepository oauthClientRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RateLimiter rateLimiter;
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     public AuthController(UserRepository userRepository, PatientRepository patientRepository,
-                          OAuthClientRepository oauthClientRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+                          OAuthClientRepository oauthClientRepository, PasswordEncoder passwordEncoder,
+                          JwtUtil jwtUtil, RateLimiter rateLimiter) {
         this.userRepository = userRepository;
         this.patientRepository = patientRepository;
         this.oauthClientRepository = oauthClientRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
+        this.rateLimiter = rateLimiter;
     }
 
     @PostMapping("/token")
-    public ResponseEntity<?> getToken(@RequestBody TokenRequest request) {
+    public ResponseEntity<?> getToken(@Valid @RequestBody TokenRequest request) {
         if (!"client_credentials".equals(request.getGrantType())) {
             return ResponseEntity.status(400).body(Map.of("error", "Unsupported grant type"));
         }
@@ -89,8 +98,16 @@ public class AuthController {
             return ResponseEntity.status(400).body(Map.of("error", "Email and password are required"));
         }
 
+        if (!rateLimiter.isAllowed(email)) {
+            long secs = rateLimiter.secondsUntilReset(email);
+            log.warn("Rate limit exceeded for email: {}", email);
+            return ResponseEntity.status(429).body(Map.of(
+                    "error", "Too many login attempts. Try again in " + secs + " seconds."));
+        }
+
         Optional<User> user = userRepository.findByEmail(email);
         if (user.isEmpty() || !passwordEncoder.matches(password, user.get().getPassword())) {
+            log.warn("Failed login attempt for email: {}", email);
             return ResponseEntity.status(401).body(Map.of("error", "Invalid credentials"));
         }
 
@@ -108,7 +125,7 @@ public class AuthController {
     @PostMapping("/register/doctor")
     public ResponseEntity<?> registerDoctor(
             @RequestHeader("Authorization") String creatorAuth,
-            @RequestBody RegisterRequest request) {
+            @Valid @RequestBody RegisterRequest request) {
 
         Optional<User> creatorOpt = resolveTokenUser(creatorAuth);
         if (creatorOpt.isEmpty() || !"ADMIN".equalsIgnoreCase(creatorOpt.get().getRole())) {
@@ -140,7 +157,7 @@ public class AuthController {
     @PostMapping("/register/patient")
     public ResponseEntity<?> registerPatient(
             @RequestHeader("Authorization") String creatorAuth,
-            @RequestBody RegisterRequest request) {
+            @Valid @RequestBody RegisterRequest request) {
 
         Optional<User> creatorOpt = resolveTokenUser(creatorAuth);
         if (creatorOpt.isEmpty() || !"Doctor".equalsIgnoreCase(creatorOpt.get().getRole())) {
